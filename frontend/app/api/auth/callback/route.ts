@@ -26,5 +26,19 @@ export async function GET(request: Request) {
   });
   const userData = await userRes.json();
 
-  return NextResponse.json({access_token: tokenData.access_token, username: userData.username, email: userData.email});
+  const user_creation = await fetch('http://127.0.0.1:5000/create-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userData.username,
+      token: tokenData.access_token,
+      email: userData.email
+    })
+  });
+
+  return user_creation.ok
+    ? NextResponse.json({ message: 'User created successfully!' })
+    : NextResponse.json({ message: 'Failed to create user' }, { status: 500 });
+
+  // return NextResponse.json({token: tokenData.access_token, user_id: userData.username, email: userData.email});
 }

@@ -2,6 +2,7 @@ import os
 import openai
 from supabase import create_client, Client
 from pydantic import BaseModel
+from keys import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 class damy_format(BaseModel):
     cat_name: str
@@ -34,7 +35,7 @@ class LLM:
 
 class SupabaseClient:
     def __init__(self) -> None:
-        self.supabase: Client = create_client(os.getenv("SUPABASE_URL_tm"), os.getenv("SUPABASE_KEY_tm"))
+        self.supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     def get_client(self):
         return self.supabase
