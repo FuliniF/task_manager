@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   if (user_creation.ok) {
     console.log('User created successfully, setting cookie...');
     // Store token in secure HTTP-only cookie or return it to frontend
-    const response = NextResponse.redirect(`${process.env.BACK_URL}/welcome`);
+    const response = NextResponse.redirect(`${process.env.DOMAIN_URL}/welcome`);
     response.cookies.set('access_token', tokenData.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
