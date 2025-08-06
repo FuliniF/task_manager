@@ -18,6 +18,11 @@ export async function GET(request: Request) {
   });
 
   const tokenData = await tokenRes.json();
+  console.log('OAuth Token Response:', {
+    access_token_length: tokenData.access_token?.length,
+    token_type: tokenData.token_type,
+    expires_in: tokenData.expires_in
+  });
 
   const userRes = await fetch('https://id.nycu.edu.tw/api/profile', {
     headers: {
@@ -25,20 +30,33 @@ export async function GET(request: Request) {
     }
   });
   const userData = await userRes.json();
+  console.log('User Data from NYCU:', userData);
 
   const user_creation = await fetch('http://127.0.0.1:5000/create-user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       user_id: userData.username,
-      token: tokenData.access_token,
       email: userData.email
     })
   });
 
-  return user_creation.ok
-    ? NextResponse.json({ message: 'User created successfully!' })
-    : NextResponse.json({ message: 'Failed to create user' }, { status: 500 });
+  if (user_creation.ok) {
+    console.log('User created successfully, setting cookie...');
+    // Store token in secure HTTP-only cookie or return it to frontend
+    const response = NextResponse.redirect(new URL('/', request.url));
+    response.cookies.set('access_token', tokenData.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 3600 // 1 hour
+    });
+    console.log('Cookie set with token length:', tokenData.access_token?.length);
+    return response;
+  } else {
+    console.error('Failed to create user');
+    return NextResponse.json({ message: 'Failed to create user' }, { status: 500 });
+  }
 
   // return NextResponse.json({token: tokenData.access_token, user_id: userData.username, email: userData.email});
 }
