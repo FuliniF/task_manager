@@ -85,39 +85,69 @@ async def read_root():
 @app.post("/create-user")
 async def create_user(user: User):
     """Create user without storing OAuth tokens"""
-    # Check if user already exists
-    existing_user = (
-        supabase_client.get_client()
-        .from_("users")
-        .select("*")
-        .eq("user_id", user.user_id)
-        .execute()
-    )
-
-    if existing_user.data:
-        return {"message": "User already exists", "user_id": user.user_id}
-
-    # Insert user without storing OAuth token
-    result = (
-        supabase_client.get_client()
-        .from_("users")
-        .insert(
-            {
-                "user_id": user.user_id,
-                "email": user.email,
-                "goal": user.goal,
-                "status": user.status or "active",
-            }
+    try:
+        # Check if user already exists
+        existing_user = (
+            supabase_client.get_client()
+            .from_("users")
+            .select("*")
+            .eq("user_id", user.user_id)
+            .execute()
         )
-        .execute()
-    )
 
-    if result.get("error"):
+        if existing_user.data:
+            return {
+                "message": "User already exists",
+                "user_id": user.user_id,
+                "status": "existing",
+            }
+
+        # Insert user without storing OAuth token
+        result = (
+            supabase_client.get_client()
+            .from_("users")
+            .insert(
+                {
+                    "user_id": user.user_id,
+                    "email": user.email,
+                    "goal": user.goal,
+                    "status": user.status or "active",
+                }
+            )
+            .execute()
+        )
+
+        # Check for errors in the Supabase response
+        # Supabase Python client stores errors in result.error, not result["error"]
+        if hasattr(result, "error") and result.error:
+            print(f"Supabase error: {result.error}")
+            raise HTTPException(
+                status_code=500, detail=f"Database error: {result.error}"
+            )
+
+        # Also check if data was actually inserted
+        if not result.data:
+            print(f"No data returned from insert operation")
+            raise HTTPException(
+                status_code=500, detail="Failed to create user: No data returned"
+            )
+
+        print(f"User created successfully: {user.user_id}")
+        return {
+            "message": "User created successfully",
+            "user_id": user.user_id,
+            "status": "created",
+        }
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        print(f"Unexpected error in create_user: {str(e)}")
+        print(f"Error type: {type(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error creating user: {result['error']['message']}"
         )
-
-    return {"message": "User created successfully", "user_id": user.user_id}
 
 
 @app.get("/profile")

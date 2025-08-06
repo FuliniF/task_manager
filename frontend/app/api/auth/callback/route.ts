@@ -41,10 +41,20 @@ export async function GET(request: Request) {
     })
   });
 
+  console.log('User creation response status:', user_creation.status);
+  console.log('User creation response ok:', user_creation.ok);
+
   if (user_creation.ok) {
-    console.log('User created successfully, setting cookie...');
-    // Store token in secure HTTP-only cookie or return it to frontend
-    const response = NextResponse.redirect(`${process.env.DOMAIN_URL}/welcome`);
+    const creationResult = await user_creation.json();
+    console.log('User creation result:', creationResult);
+    
+    // Both "created" and "existing" are success cases
+    console.log('User processed successfully, setting cookie...');
+    
+    // Add user status to redirect URL for better UX
+    const redirectUrl = `${process.env.DOMAIN_URL}/welcome?status=${creationResult.status || 'success'}`;
+    const response = NextResponse.redirect(redirectUrl);
+    
     response.cookies.set('access_token', tokenData.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -54,8 +64,16 @@ export async function GET(request: Request) {
     console.log('Cookie set with token length:', tokenData.access_token?.length);
     return response;
   } else {
-    console.error('Failed to create user');
-    return NextResponse.json({ message: 'Failed to create user' }, { status: 500 });
+    // Get error details for debugging
+    const errorResult = await user_creation.json().catch(() => ({ message: 'Unknown error' }));
+    console.error('Failed to create user. Status:', user_creation.status);
+    console.error('Error details:', errorResult);
+    
+    return NextResponse.json({ 
+      message: 'Failed to create user', 
+      status: user_creation.status,
+      details: errorResult 
+    }, { status: 500 });
   }
 
   // return NextResponse.json({token: tokenData.access_token, user_id: userData.username, email: userData.email});
