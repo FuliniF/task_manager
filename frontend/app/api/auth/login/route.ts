@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
+export async function GET() {
   const redirectUri = encodeURIComponent('http://goalreacher.me/api/auth/callback');
   const clientID = process.env.NYCU_CLIENT_ID;
   

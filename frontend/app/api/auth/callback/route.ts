@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const userData = await userRes.json();
   console.log('User Data from NYCU:', userData);
 
-  const user_creation = await fetch('http://127.0.0.1:5000/create-user', {
+  const user_creation = await fetch('https://tm-backend-fhb2.onrender.com/create-user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
