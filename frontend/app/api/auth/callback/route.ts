@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const redirectUri = 'http://goalreacher.me/api/auth/callback';
+  const redirectUri = `${process.env.DOMAIN_URL}/api/auth/callback`;
 
   const tokenRes = await fetch('https://id.nycu.edu.tw/o/token/', {
     method: 'POST',
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const userData = await userRes.json();
   console.log('User Data from NYCU:', userData);
 
-  const user_creation = await fetch('https://tm-backend-fhb2.onrender.com/create-user', {
+  const user_creation = await fetch(`${process.env.BACK_URL}/create-user`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   if (user_creation.ok) {
     console.log('User created successfully, setting cookie...');
     // Store token in secure HTTP-only cookie or return it to frontend
-    const response = NextResponse.redirect(new URL('/', request.url));
+    const response = NextResponse.redirect(new URL('/welcome', request.url));
     response.cookies.set('access_token', tokenData.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

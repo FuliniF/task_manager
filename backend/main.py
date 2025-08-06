@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 import httpx
@@ -11,7 +12,10 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://goalreacher.me"],  # Add your frontend URLs
+    allow_origins=[
+        "https://goalreacher.me",
+        f"{os.getenv('DOMAIN_URL')}",
+    ],  # Add your frontend URLs
     allow_credentials=True,  # Important for cookies
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
