@@ -16,7 +16,7 @@ class damy_format(BaseModel):
 class LLM:
     def __init__(self, model="gpt-4.1-nano") -> None:
         OPENAI_API_KEY_CGI = os.getenv("OPENAI_API_KEY_CGI")
-        self.client = openai.OpenAI(OPENAI_API_KEY_CGI)
+        self.client = openai.OpenAI(api_key=OPENAI_API_KEY_CGI)
         self.model = model
 
     def chat(self, message, temperature=0.0, max_tokens=1000, text_format=None):

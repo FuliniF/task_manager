@@ -172,54 +172,6 @@ async def get_profile(token_data: TokenData = Depends(verify_token)):
     }
 
 
-@app.get("/debug/cookies")
-async def debug_cookies(request: Request):
-    """Debug endpoint to inspect all cookies and headers"""
-    return {
-        "cookies": dict(request.cookies),
-        "headers": dict(request.headers),
-        "authorization_header": request.headers.get("authorization"),
-        "access_token_cookie": request.cookies.get("access_token"),
-        "cookie_count": len(request.cookies),
-    }
-
-
-@app.get("/debug/token-info")
-async def debug_token_info(request: Request):
-    """Debug endpoint to check token validation without full auth"""
-    token = None
-    source = "none"
-
-    if request.headers.get("authorization", "").startswith("Bearer "):
-        token = request.headers.get("authorization", "").split(" ")[1]
-        source = "header"
-    elif "access_token" in request.cookies:
-        token = request.cookies["access_token"]
-        source = "cookie"
-
-    if not token:
-        return {"error": "No token found", "source": source}
-
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://id.nycu.edu.tw/api/profile",
-                headers={"Authorization": f"Bearer {token}"},
-            )
-
-        return {
-            "token_source": source,
-            "token_length": len(token),
-            "token_preview": f"{token[:10]}...{token[-10:]}",
-            "nycu_response_status": response.status_code,
-            "nycu_response_valid": response.status_code == 200,
-            "user_data": response.json() if response.status_code == 200 else None,
-        }
-
-    except Exception as e:
-        return {"token_source": source, "token_length": len(token), "error": str(e)}
-
-
 @app.post("/logout")
 async def logout(request: Request):
     """Logout endpoint that clears the access token cookie"""
