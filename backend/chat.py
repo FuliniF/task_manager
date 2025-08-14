@@ -21,29 +21,30 @@ class MilestoneList(BaseModel):
     milestones: list[Milestone]
 
 
-class DateTime(BaseModel):
-    dateTime: str
-    timeZone: str
-
-
 class Mission(BaseModel):
     title: str
     duration: int
-    repeat: int
+    recurrence: int
 
 
 class MissionList(BaseModel):
     missions: list[Mission]
 
 
-class Event(BaseModel):
+class DateTime(BaseModel):
+    dateTime: str
+    timeZone: str
+
+
+class Schedule(BaseModel):
     summary: str
     start: DateTime
     end: DateTime
+    recurrence: str
 
 
-class EventList(BaseModel):
-    events: list[Event]
+class ScheduleList(BaseModel):
+    events: list[Schedule]
 
 
 def gen_goal(goal):
@@ -100,7 +101,7 @@ def gen_schedules(missions, today):
             ),
         }
     ]
-    response = ChatClient.chat(message, text_format=EventList)
+    response = ChatClient.chat(message, text_format=ScheduleList)
     return response
 
 
@@ -125,7 +126,15 @@ def first_time_user_flow():
     mission = gen_missions(goal, status, milestones)
     print("Generated missions:")
     for m in mission.missions:
-        print(f"Title: {m.title}, Duration: {m.duration}, Repeat: {m.repeat}")
+        print(f"Title: {m.title}, Duration: {m.duration}, Recurrence: {m.recurrence}")
+
+    print("Generating schedules...\n----------------------------------------")
+    schedules = gen_schedules(mission.missions, today)
+    print("Generated schedules:")
+    for event in schedules.events:
+        print(
+            f"Summary: {event.summary}, Start: {event.start.dateTime}, End: {event.end.dateTime}, Recurrence: {event.recurrence}"
+        )
 
     return {"goal": goal, "status": status, "milestones": milestones}
 

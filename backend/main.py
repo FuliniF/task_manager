@@ -1,7 +1,9 @@
 import os
+from datetime import datetime
 from typing import Optional
 
 import httpx
+from chat import gen_goal, gen_milestones, gen_missions, gen_schedules, gen_status
 from client import SupabaseClient
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +36,32 @@ class User(BaseModel):
 class TokenData(BaseModel):
     user_id: str
     email: str
+
+
+class GoalRequest(BaseModel):
+    goal: str
+
+
+class StatusRequest(BaseModel):
+    goal: str
+    previous_status: Optional[str] = "None"
+    user_description: Optional[str] = "None"
+
+
+class MilestoneRequest(BaseModel):
+    goal: str
+    status: str
+
+
+class MissionRequest(BaseModel):
+    goal: str
+    status: str
+    milestones: dict
+
+
+class ScheduleRequest(BaseModel):
+    missions: list
+    today: Optional[str] = None
 
 
 async def verify_token(
@@ -205,3 +233,62 @@ async def logout(request: Request):
     )
 
     return response
+
+
+@app.post("/api/generate-goal")
+async def generate_goal(request: GoalRequest):
+    try:
+        result = gen_goal(request.goal)
+        return {"goal": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating goal: {str(e)}")
+
+
+@app.post("/api/generate-status")
+async def generate_status(request: StatusRequest):
+    try:
+        result = gen_status(
+            request.goal, request.previous_status, request.user_description
+        )
+        return {"status": result}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating status: {str(e)}"
+        )
+
+
+@app.post("/api/generate-milestones")
+async def generate_milestones(request: MilestoneRequest):
+    try:
+        result = gen_milestones(request.goal, request.status)
+        # Convert the Pydantic model to dict
+        return result.dict() if hasattr(result, "dict") else result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating milestones: {str(e)}"
+        )
+
+
+@app.post("/api/generate-missions")
+async def generate_missions(request: MissionRequest):
+    try:
+        result = gen_missions(request.goal, request.status, request.milestones)
+        # Convert the Pydantic model to dict
+        return result.dict() if hasattr(result, "dict") else result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating missions: {str(e)}"
+        )
+
+
+@app.post("/api/generate-schedules")
+async def generate_schedules(request: ScheduleRequest):
+    try:
+        today = request.today or datetime.now().strftime("%Y-%m-%d")
+        result = gen_schedules(request.missions, today)
+        # Convert the Pydantic model to dict
+        return result.dict() if hasattr(result, "dict") else result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating schedules: {str(e)}"
+        )
