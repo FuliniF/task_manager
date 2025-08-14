@@ -210,7 +210,7 @@ export default function TaskManager() {
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-indigo-700 mb-4">Goal Achievement Assistant</h1>
-        <p className="text-gray-600">Let's break down your goal into actionable steps and schedules</p>
+        <p className="text-gray-600">Let&apos;s break down your goal into actionable steps and schedules</p>
       </div>
 
       {error && (
