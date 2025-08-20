@@ -207,215 +207,296 @@ export default function TaskManager() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-indigo-700 mb-4">Goal Achievement Assistant</h1>
-        <p className="text-gray-600">Let&apos;s break down your goal into actionable steps and schedules</p>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-          {error}
-        </div>
-          )}
-
-          {/* Chat Room Style */}
-          <div className="flex flex-col gap-4 bg-gray-100 rounded-lg p-6 shadow-inner min-h-[500px]">
-        {/* Step 1: Goal Input */}
-        <div className="flex flex-col items-end">
-          {!stepStatus.goal ? (
-            <div className="flex flex-col items-end w-full">
-              <div className="bg-white rounded-lg p-4 shadow mb-2 max-w-lg w-full self-end">
-            <textarea
-              value={goalInput}
-              onChange={(e) => setGoalInput(e.target.value)}
-              placeholder="Describe your goal in detail..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              rows={3}
-            />
-            <button
-              onClick={handleGenerateGoal}
-              disabled={loading === 'goal' || !goalInput.trim()}
-              className="mt-2 bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed float-right"
-            >
-              {loading === 'goal' ? 'Processing...' : 'Send'}
-            </button>
-              </div>
-              <span className="text-xs text-gray-500 mr-2">You</span>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-end w-full">
-            <div className="bg-white rounded-lg p-4 shadow max-w-lg w-full self-end">
-              <p className="text-gray-800">{goalInput}</p>
-            </div>
-            <span className="text-xs text-gray-500 mr-2">You</span>
-              </div>
-              <div className="flex flex-col items-start w-full">
-            <div className="bg-indigo-50 rounded-lg p-4 shadow max-w-lg w-full self-start mt-2">
-              <span className="font-semibold text-indigo-700">Assistant:</span>
-              <p className="text-gray-800 mt-1">{taskState.goal}</p>
-            </div>
-              </div>
-            </>
-          )}
+    <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 bg-[#F8FAF9] min-h-screen font-serif">
+      {/* Chat Section */}
+      <div className="col-span-2 flex flex-col bg-white rounded-2xl shadow-md overflow-hidden">
+        <div className="bg-emerald-800 text-white px-6 py-4 text-lg font-semibold">
+          Goal Achievement Assistant
         </div>
 
-        {/* Step 2: Status Input */}
-        {stepStatus.goal && (
-          <div className="flex flex-col items-end">
-            {!stepStatus.status ? (
-              <div className="flex flex-col items-end w-full">
-            <div className="bg-white rounded-lg p-4 shadow mb-2 max-w-lg w-full self-end">
-              <textarea
-                value={statusInput}
-                onChange={(e) => setStatusInput(e.target.value)}
-                placeholder="Describe your current situation and progress toward this goal..."
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                rows={3}
-              />
-              <button
-                onClick={handleGenerateStatus}
-                disabled={loading === 'status' || !statusInput.trim()}
-                className="mt-2 bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed float-right"
-              >
-                {loading === 'status' ? 'Processing...' : 'Send'}
-              </button>
+        <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-[#F9FAF9]">
+          {error && (
+            <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-md">
+              {error}
             </div>
-            <span className="text-xs text-gray-500 mr-2">You</span>
+          )}
+
+          {/* Chat bubbles */}
+          {/* Step 0: Initial Prompt to User */}
+          <div className="flex flex-col items-start">
+            <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+              <span className="font-semibold text-emerald-900">Assistant:</span>
+              <p className="mt-1">Hi there! Describe your new goal to me🚀</p>
+            </div>
+          </div>
+          {/* Step 1: Goal */}
+          <div className="flex flex-col gap-3">
+            {!stepStatus.goal ? (
+              <div className="flex flex-col items-end">
+                <div className="bg-white rounded-xl shadow p-4 max-w-lg w-full border border-gray-200">
+                  <textarea
+                    value={goalInput}
+                    onChange={(e) => setGoalInput(e.target.value)}
+                    placeholder="Describe your goal..."
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 text-gray-800"
+                    rows={3}
+                  />
+                  <button
+                    onClick={handleGenerateGoal}
+                    disabled={loading === 'goal' || !goalInput.trim()}
+                    className="mt-3 bg-emerald-700 text-white px-5 py-2 rounded-md hover:bg-emerald-800 disabled:bg-gray-400 disabled:cursor-not-allowed float-right"
+                  >
+                    {loading === 'goal' ? 'Processing...' : 'Send'}
+                  </button>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">You</span>
               </div>
             ) : (
               <>
-            <div className="flex flex-col items-end w-full">
-              <div className="bg-white rounded-lg p-4 shadow max-w-lg w-full self-end">
-                <p className="text-gray-800">{statusInput}</p>
-              </div>
-              <span className="text-xs text-gray-500 mr-2">You</span>
-            </div>
-            <div className="flex flex-col items-start w-full">
-              <div className="bg-indigo-50 rounded-lg p-4 shadow max-w-lg w-full self-start mt-2">
-                <span className="font-semibold text-indigo-700">Assistant:</span>
-                <p className="text-gray-800 mt-1">{taskState.status}</p>
-              </div>
-            </div>
+                {/* User bubble */}
+                <div className="flex flex-col items-end">
+                  <div className="bg-white rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    {goalInput}
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">You</span>
+                </div>
+                {/* Assistant bubble */}
+                <div className="flex flex-col items-start">
+                  <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    <span className="font-semibold text-emerald-900">Assistant:</span>
+                    <p className="mt-1">
+                      Got it! {taskState.goal}<br />
+                      What have you done so far?
+                    </p>
+                  </div>
+                </div>
               </>
             )}
           </div>
-        )}
 
-        {/* Step 3: Milestones */}
-        {stepStatus.status && (
-          <div className="flex flex-col items-start w-full">
-            {!stepStatus.milestones ? (
-              <div className="flex flex-col items-start w-full">
-            <button
-              onClick={handleGenerateMilestones}
-              disabled={loading === 'milestones'}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {loading === 'milestones' ? 'Generating...' : 'Generate Milestones'}
-            </button>
-            <span className="text-xs text-gray-500 ml-2 mt-1">You</span>
-              </div>
-            ) : (
-              <div className="bg-indigo-50 rounded-lg p-4 shadow max-w-lg w-full self-start mt-2">
-            <span className="font-semibold text-indigo-700">Assistant:</span>
-            <div className="space-y-2 mt-1">
-              {taskState.milestones?.milestones.map((milestone, index) => (
-                <div key={index} className="bg-white p-3 rounded-md shadow">
-                  <h3 className="font-semibold text-gray-800 mb-1">{milestone.title}</h3>
-                  <p className="text-gray-600">{milestone.description}</p>
+          {/* Step 2: Status */}
+          {stepStatus.goal && (
+            <div className="flex flex-col gap-3">
+              {!stepStatus.status ? (
+                <div className="flex flex-col items-end">
+                  <div className="bg-white rounded-xl shadow p-4 max-w-lg w-full border border-gray-200">
+                    <textarea
+                      value={statusInput}
+                      onChange={(e) => setStatusInput(e.target.value)}
+                      placeholder="Describe your current situation..."
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 text-gray-800"
+                      rows={3}
+                    />
+                    <button
+                      onClick={handleGenerateStatus}
+                      disabled={loading === 'status' || !statusInput.trim()}
+                      className="mt-3 bg-emerald-700 text-white px-5 py-2 rounded-md hover:bg-emerald-800 disabled:bg-gray-400 disabled:cursor-not-allowed float-right"
+                    >
+                      {loading === 'status' ? 'Processing...' : 'Send'}
+                    </button>
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">You</span>
                 </div>
-              ))}
+              ) : (
+                <>
+                  <div className="flex flex-col items-end">
+                    <div className="bg-white rounded-xl shadow p-4 max-w-lg text-gray-900">
+                      {statusInput}
+                    </div>
+                    <span className="text-xs text-gray-500 mt-1">You</span>
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                      <span className="font-semibold text-emerald-900">Assistant:</span>
+                      <p className="mt-1">{taskState.status}</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-              </div>
-            )}
-          </div>
-        )}
+          )}
 
-        {/* Step 4: Missions */}
-        {stepStatus.milestones && (
-          <div className="flex flex-col items-start w-full">
-            {!stepStatus.missions ? (
-              <div className="flex flex-col items-start w-full">
-            <button
-              onClick={handleGenerateMissions}
-              disabled={loading === 'missions'}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {loading === 'missions' ? 'Generating...' : 'Generate Missions'}
-            </button>
-            <span className="text-xs text-gray-500 ml-2 mt-1">You</span>
-              </div>
-            ) : (
-              <div className="bg-indigo-50 rounded-lg p-4 shadow max-w-lg w-full self-start mt-2">
-            <span className="font-semibold text-indigo-700">Assistant:</span>
-            <div className="space-y-2 mt-1">
-              {taskState.missions?.missions.map((mission, index) => (
-                <div key={index} className="bg-white p-3 rounded-md shadow">
-                  <h3 className="font-semibold text-gray-800 mb-1">{mission.title}</h3>
-                  <div className="flex gap-4 text-sm text-gray-600">
-                <span>Duration: {mission.duration} minutes</span>
-                <span>Recurrence: {mission.recurrence} times</span>
+          {/* Step 3: Milestones */}
+          {stepStatus.status && (
+            <div className="flex flex-col gap-3">
+              {!stepStatus.milestones ? (
+                <div className="flex flex-col items-start">
+                  <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    <span className="font-semibold text-emerald-900">Assistant:</span>
+                    <p className="mt-1">Now, let me create some milestones for you...</p>
+                    <button
+                      onClick={handleGenerateMilestones}
+                      disabled={loading === 'milestones'}
+                      className="mt-3 bg-emerald-700 text-white px-6 py-2 rounded-md hover:bg-emerald-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {loading === 'milestones' ? 'Generating...' : 'Generate Milestones'}
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 5: Schedules */}
-        {stepStatus.missions && (
-          <div className="flex flex-col items-start w-full">
-            {!stepStatus.schedules ? (
-              <div className="flex flex-col items-start w-full">
-            <button
-              onClick={handleGenerateSchedules}
-              disabled={loading === 'schedules'}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {loading === 'schedules' ? 'Generating...' : 'Generate Schedule'}
-            </button>
-            <span className="text-xs text-gray-500 ml-2 mt-1">You</span>
-              </div>
-            ) : (
-              <div className="bg-indigo-50 rounded-lg p-4 shadow max-w-lg w-full self-start mt-2">
-            <span className="font-semibold text-indigo-700">Assistant:</span>
-            <div className="space-y-2 mt-1">
-              {taskState.schedules?.events.map((event, index) => (
-                <div key={index} className="bg-white p-3 rounded-md shadow">
-                  <h3 className="font-semibold text-gray-800 mb-1">{event.summary}</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                <div>
-                  <span className="font-medium">Start:</span> {new Date(event.start.dateTime).toLocaleString()}
-                </div>
-                <div>
-                  <span className="font-medium">End:</span> {new Date(event.end.dateTime).toLocaleString()}
-                </div>
-                <div className="col-span-2">
-                  <span className="font-medium">Recurrence:</span> {event.recurrence}
-                </div>
+              ) : (
+                <div className="flex flex-col items-start">
+                  <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    <span className="font-semibold text-emerald-900">Assistant:</span>
+                    <div className="space-y-2 mt-2">
+                      {taskState.milestones?.milestones.map((milestone, index) => (
+                        <div key={index} className="bg-white p-3 rounded-md shadow-sm">
+                          <h3 className="font-semibold text-gray-800">{milestone.title}</h3>
+                          <p className="text-gray-600 text-sm">{milestone.description}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-              </div>
-            )}
-          </div>
-        )}
-          </div>
-      {(stepStatus.goal || stepStatus.status || stepStatus.milestones || stepStatus.missions || stepStatus.schedules) && (
-        <div className="text-center">
-          <button
-            onClick={resetFlow}
-            className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700"
-          >
-            Start Over
-          </button>
+          )}
+
+          {/* Step 4: Missions */}
+          {stepStatus.milestones && (
+            <div className="flex flex-col gap-3">
+              {!stepStatus.missions ? (
+                <div className="flex flex-col items-start">
+                  <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    <span className="font-semibold text-emerald-900">Assistant:</span>
+                    <p className="mt-1">Great! Now let me break these down into actionable missions...</p>
+                    <button
+                      onClick={handleGenerateMissions}
+                      disabled={loading === 'missions'}
+                      className="mt-3 bg-emerald-700 text-white px-6 py-2 rounded-md hover:bg-emerald-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {loading === 'missions' ? 'Generating...' : 'Generate Missions'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-start">
+                  <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    <span className="font-semibold text-emerald-900">Assistant:</span>
+                    <div className="space-y-2 mt-2">
+                      {taskState.missions?.missions.map((mission, index) => (
+                        <div key={index} className="bg-white p-3 rounded-md shadow-sm">
+                          <h3 className="font-semibold text-gray-800">{mission.title}</h3>
+                          <div className="flex gap-4 text-sm text-gray-600 mt-1">
+                            <span>Duration: {mission.duration} mins</span>
+                            <span>Recurrence: {mission.recurrence} times</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 5: Schedules */}
+          {stepStatus.missions && (
+            <div className="flex flex-col gap-3">
+              {!stepStatus.schedules ? (
+                <div className="flex flex-col items-start">
+                  <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    <span className="font-semibold text-emerald-900">Assistant:</span>
+                    <p className="mt-1">Perfect! Now let me create a schedule for you...</p>
+                    <button
+                      onClick={handleGenerateSchedules}
+                      disabled={loading === 'schedules'}
+                      className="mt-3 bg-emerald-700 text-white px-6 py-2 rounded-md hover:bg-emerald-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {loading === 'schedules' ? 'Generating...' : 'Generate Schedule'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-start">
+                  <div className="bg-emerald-100 rounded-xl shadow p-4 max-w-lg text-gray-900">
+                    <span className="font-semibold text-emerald-900">Assistant:</span>
+                    <div className="space-y-2 mt-2">
+                      {taskState.schedules?.events.map((event, index) => (
+                        <div key={index} className="bg-white p-3 rounded-md shadow-sm">
+                          <h3 className="font-semibold text-gray-800">{event.summary}</h3>
+                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mt-1">
+                            <div>
+                              <span className="font-medium">Start:</span>{' '}
+                              {new Date(event.start.dateTime).toLocaleString()}
+                            </div>
+                            <div>
+                              <span className="font-medium">End:</span>{' '}
+                              {new Date(event.end.dateTime).toLocaleString()}
+                            </div>
+                            <div className="col-span-2">
+                              <span className="font-medium">Recurrence:</span> {event.recurrence}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="p-4 border-t bg-gray-50 flex justify-center">
+          {(stepStatus.goal || stepStatus.status || stepStatus.milestones || stepStatus.missions || stepStatus.schedules) && (
+            <button
+              onClick={resetFlow}
+              className="bg-gray-700 text-white px-6 py-2 rounded-md hover:bg-gray-800"
+            >
+              Start Over
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Summary Section */}
+      <div className="hidden lg:flex flex-col bg-white rounded-2xl shadow-md p-6">
+        <h2 className="text-xl font-semibold text-emerald-800 mb-4">Summary</h2>
+        <div className="space-y-4 text-sm text-gray-800">
+          {taskState.goal && (
+            <div>
+              <h3 className="font-medium text-gray-900">Goal</h3>
+              <p>{taskState.goal}</p>
+            </div>
+          )}
+          {taskState.status && (
+            <div>
+              <h3 className="font-medium text-gray-900">Status</h3>
+              <p>{taskState.status}</p>
+            </div>
+          )}
+          {taskState.milestones && (
+            <div>
+              <h3 className="font-medium text-gray-900">Milestones</h3>
+              <ul className="list-disc ml-5">
+                {taskState.milestones.milestones.map((m, i) => (
+                  <li key={i}>{m.title}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {taskState.missions && (
+            <div>
+              <h3 className="font-medium text-gray-900">Missions</h3>
+              <ul className="list-disc ml-5">
+                {taskState.missions.missions.map((m, i) => (
+                  <li key={i}>{m.title}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {taskState.schedules && (
+            <div>
+              <h3 className="font-medium text-gray-900">Schedules</h3>
+              <ul className="list-disc ml-5">
+                {taskState.schedules.events.map((e, i) => (
+                  <li key={i}>{e.summary}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

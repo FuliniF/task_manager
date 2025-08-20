@@ -1,16 +1,15 @@
 'use client';
 
 import TaskManager from '../components/TaskManager';
-
 export default function WelcomePage() {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className={`min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 p-4`}>
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl text-indigo-700 font-bold mb-4">
+                    <h1 className="text-4xl text-emerald-900 font-bold mb-4 font-serif">
                         Welcome to Goal Reacher!
                     </h1>
-                    <p className="text-lg text-gray-700 mb-6">
+                    <p className="text-lg text-gray-700 mb-6 font-serif">
                         Transform your goals into actionable plans with AI assistance
                     </p>
                     {/* logout button */}
