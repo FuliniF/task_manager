@@ -59,6 +59,7 @@ export async function GET(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
       maxAge: 3600 // 1 hour
     });
     console.log('Cookie set with token length:', tokenData.access_token?.length);

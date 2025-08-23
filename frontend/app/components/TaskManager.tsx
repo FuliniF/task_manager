@@ -1,9 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TaskState, StepStatus, MilestoneList, MissionList, ScheduleList } from '../types';
 
 export default function TaskManager() {
+  useEffect(() => {
+    // cookie debug
+    const testCookieInTaskManager = async () => {
+      try {
+        const response = await fetch('/api/test-cookie', {
+          credentials: 'include'
+        });
+        const result = await response.json();
+        console.log('TaskManager cookie test:', result);
+      } catch (error) {
+        console.error('TaskManager cookie test failed:', error);
+      }
+    };
+    
+    testCookieInTaskManager();
+  }, []);
+
   const [taskState, setTaskState] = useState<TaskState>({
     goal: '',
     status: '',
@@ -22,6 +39,7 @@ export default function TaskManager() {
 
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
   // Form inputs
   const [goalInput, setGoalInput] = useState('');
@@ -204,6 +222,54 @@ export default function TaskManager() {
     setGoalInput('');
     setStatusInput('');
     setError(null);
+    setSaveSuccess(false);
+  };
+
+  const saveData = async () => {
+    if (!taskState.goal || !taskState.status || !taskState.milestones || !taskState.missions || !taskState.schedules) {
+      setError('Please complete all steps before saving');
+      return;
+    }
+
+    setLoading('saving');
+    setError(null);
+
+    try {
+      const response = await fetch('/api/chat/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for authentication
+        body: JSON.stringify({
+          goal: taskState.goal,
+          status: taskState.status,
+          milestones: taskState.milestones,
+          missions: taskState.missions,
+          schedules: taskState.schedules,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save data');
+      }
+      else{
+        console.log('saved data: ', {
+          goal: taskState.goal,
+          status: taskState.status,
+          milestones: taskState.milestones,
+          missions: taskState.missions,
+          schedules: taskState.schedules,
+        });
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000); // Hide success message after 3 seconds
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while saving');
+    } finally {
+      setLoading(null);
+    }
   };
 
   return (
@@ -215,11 +281,6 @@ export default function TaskManager() {
         </div>
 
         <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-[#F9FAF9]">
-          {error && (
-            <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-md">
-              {error}
-            </div>
-          )}
 
           {/* Chat bubbles */}
           {/* Step 0: Initial Prompt to User */}
@@ -437,7 +498,31 @@ export default function TaskManager() {
           )}
         </div>
 
-        <div className="p-4 border-t bg-gray-50 flex justify-center">
+        {error && (
+          <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-md">
+            {error}
+          </div>
+        )}
+
+        {saveSuccess && (
+          <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md">
+            Data saved successfully!
+          </div>
+        )}
+
+        <div className="p-4 border-t bg-gray-50 flex justify-center gap-3">
+        {/* Save buttons */}
+          {stepStatus.schedules && (
+            <>
+              <button
+                onClick={saveData}
+                disabled={loading === 'saving'}
+                className="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {loading === 'saving' ? 'Saving...' : 'Save Progress'}
+              </button>
+            </>
+          )}
           {(stepStatus.goal || stepStatus.status || stepStatus.milestones || stepStatus.missions || stepStatus.schedules) && (
             <button
               onClick={resetFlow}

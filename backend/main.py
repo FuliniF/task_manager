@@ -7,6 +7,7 @@ from chat import gen_goal, gen_milestones, gen_missions, gen_schedules, gen_stat
 from client import SupabaseClient
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from httpx import RequestError
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -16,6 +17,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://goalreacher.me",
+        "http://localhost:3000",
+        "http://172.25.1.253:3000",
         f"{os.getenv('DOMAIN_URL')}",
     ],  # Add your frontend URLs
     allow_credentials=True,  # Important for cookies
@@ -64,6 +67,20 @@ class ScheduleRequest(BaseModel):
     today: Optional[str] = None
 
 
+class SaveDataRequest(BaseModel):
+    goal: str
+    status: str
+    milestones: dict
+    missions: dict
+    schedules: dict
+    userid: str
+
+
+class UpdateTaskProgressRequest(BaseModel):
+    task_id: int
+    recurrence_done: int
+
+
 async def verify_token(
     request: Request, authorization: str = Header(None)
 ) -> TokenData:
@@ -96,8 +113,7 @@ async def verify_token(
 
         user_data = response.json()
         return TokenData(user_id=user_data["username"], email=user_data["email"])
-
-    except httpx.RequestException as e:
+    except RequestError as e:
         raise HTTPException(
             status_code=401, detail=f"Token verification failed: {str(e)}"
         )
@@ -292,3 +308,113 @@ async def generate_schedules(request: ScheduleRequest):
         raise HTTPException(
             status_code=500, detail=f"Error generating schedules: {str(e)}"
         )
+
+
+@app.post("/api/save-data")
+async def save_data(data: SaveDataRequest):
+    """Save milestones and tasks to database"""
+    try:
+        user_status = (
+            supabase_client.get_client()
+            .from_("users")
+            .select("status")
+            .eq("user_id", data.userid)
+            .single()
+            .execute()
+        )
+        if user_status == "working":
+            # User is already working on a task. Don't duplicate tasks
+            return {"message": "Data already exists", "user_id": data.userid}
+        if user_status == "finished":
+            # clear previous data in milestones and tasks first
+            supabase_client.get_client().from_("milestones").delete().eq(
+                "user_id", data.userid
+            ).execute()
+            supabase_client.get_client().from_("tasks").delete().eq(
+                "user_id", data.userid
+            ).execute()
+
+        # Update user's goal and status
+        user_update = (
+            supabase_client.get_client()
+            .from_("users")
+            .update({"goal": data.goal, "status": "working"})
+            .eq("user_id", data.userid)
+            .execute()
+        )
+
+        if hasattr(user_update, "error") and user_update.error:
+            raise HTTPException(
+                status_code=501, detail=f"Error updating user: {user_update.error}"
+            )
+
+        # Save new milestones
+        milestone_data = []
+        for milestone in data.milestones.get("milestones", []):
+            milestone_data.append(
+                {
+                    "user_id": data.userid,
+                    "name": milestone.get("title", ""),
+                    "description": milestone.get("description", ""),
+                }
+            )
+
+        if milestone_data:
+            milestones_result = (
+                supabase_client.get_client()
+                .from_("milestones")
+                .insert(milestone_data)
+                .execute()
+            )
+
+            if hasattr(milestones_result, "error") and milestones_result.error:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Error saving milestones: {milestones_result.error}",
+                )
+
+            # Create a mapping of milestone titles to IDs
+            milestone_map = {}
+            for milestone in milestones_result.data:
+                milestone_map[milestone["name"]] = milestone["id"]
+
+            # Save tasks (missions as tasks)
+            task_data = []
+            today = datetime.now().strftime("%Y-%m-%d")
+
+            # Find corresponding milestone for each mission
+            for mission in data.missions.get("missions", []):
+                # For simplicity, assign to first milestone or create a general one
+                milestone_id = (
+                    list(milestone_map.values())[0] if milestone_map else None
+                )
+
+                if milestone_id:
+                    task_data.append(
+                        {
+                            "milestone_id": milestone_id,
+                            "name": mission.get("title", ""),
+                            "assigned_time": mission.start.datetime,
+                            "recurrence_required": mission.get("recurrence", 1),
+                            "recurrence_done": 0,
+                        }
+                    )
+
+            if task_data:
+                tasks_result = (
+                    supabase_client.get_client()
+                    .from_("tasks")
+                    .insert(task_data)
+                    .execute()
+                )
+
+                if hasattr(tasks_result, "error") and tasks_result.error:
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"Error saving tasks: {tasks_result.error}",
+                    )
+
+        return {"message": "Data saved successfully", "user_id": data.userid}
+
+    except Exception as e:
+        raise HTTPException(status_code=504, detail=f"Error saving data: {str(e)}")
