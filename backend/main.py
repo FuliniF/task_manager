@@ -68,10 +68,8 @@ class DateTime(BaseModel):
 
 
 class ScheduleRequest(BaseModel):
-    summary: str
-    start: DateTime
-    end: DateTime
-    recurrence: str
+    missions: list
+    today: Optional[str] = None
 
 
 class SaveDataRequest(BaseModel):
@@ -388,23 +386,34 @@ async def save_data(data: SaveDataRequest):
             # Save tasks (missions as tasks)
             task_data = []
 
-            # Find corresponding milestone for each mission
-            for mission in data.missions.get("missions", []):
+            # Find corresponding milestone for each event in schedules
+            for event in data.schedules.get("events", []):
                 # For simplicity, assign to first milestone or create a general one
                 milestone_id = (
                     list(milestone_map.values())[0] if milestone_map else None
                 )
 
                 if milestone_id:
+                    recurrence_time_required = (
+                        int(event.get("recurrence", "").strip("=")[-1])
+                        if event.get("recurrence")
+                        else 1
+                    )
+                    start_time = event.get("start", {}).get("dateTime", "")
+                    end_time = event.get("end", {}).get("dateTime", "")
                     task_data.append(
                         {
-                            "milestone_id": milestone_id,
-                            "name": mission.get("title", ""),
-                            "assigned_time": mission.start.datetime,
-                            "recurrence_required": mission.get("recurrence", 1),
-                            "recurrence_done": 0,
+                            "user_id": data.userid,
+                            "name": event.get("summary", ""),
+                            "recurrence": event.get("recurrence", ""),
+                            "recurrence_time_required": recurrence_time_required,
+                            "recurrence_time_done": 0,
+                            "start_timestamptz": start_time,
+                            "end_timestamptz": end_time,
                         }
                     )
+
+            print("len task_data:", len(task_data))
 
             if task_data:
                 tasks_result = (
@@ -445,6 +454,34 @@ async def get_status(userData: User):
             raise HTTPException(status_code=404, detail="User not found")
 
         return {"status": user_status.data["status"]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting status: {str(e)}")
+
+
+@app.post("/api/load-data")
+async def load_data(userData: User):
+    try:
+        milestone_ids = (
+            supabase_client.get_client()
+            .from_("milestones")
+            .select("id")
+            .eq("user_id", userData.user_id)
+            .eq("email", userData.email)
+            .execute()
+        )
+
+        tasks = []
+        for milestone in milestone_ids.data:
+            tasks.append(
+                supabase_client.get_client()
+                .from_("tasks")
+                .select("*")
+                .eq("milestone_id", milestone.id)
+                .execute()
+            )
+
+        return {"user_id": userData.user_id, "tasks": tasks}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting status: {str(e)}")

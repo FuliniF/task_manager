@@ -187,7 +187,7 @@ export default function TaskManager() {
         },
         body: JSON.stringify({
           missions: taskState.missions?.missions,
-          today: new Date().toISOString().split('T')[0],
+          // today: new Date().toISOString().split('T')[0],
         }),
       });
 
