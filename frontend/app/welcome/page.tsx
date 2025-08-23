@@ -82,8 +82,8 @@ export default function WelcomePage() {
                         </link>
                     </div> */}
                 </div>
-                
-                {userStatus === "working" ? <Calendar /> : <TaskManager />}
+
+                {userStatus !== "working" ? <TaskManager /> : <Calendar />}
             </div>
         </div>
     );

@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from httpx import RequestError
 from pydantic import BaseModel
+from util import task2events
 
 app = FastAPI()
 
@@ -84,6 +85,12 @@ class SaveDataRequest(BaseModel):
 class UpdateTaskProgressRequest(BaseModel):
     task_id: int
     recurrence_done: int
+
+
+class ToggleEventRequest(BaseModel):
+    event_id: int
+    is_done: bool
+    user_id: str
 
 
 async def verify_token(
@@ -348,6 +355,8 @@ async def save_data(data: SaveDataRequest):
             .execute()
         )
 
+        print("User update result:", user_update)
+
         if hasattr(user_update, "error") and user_update.error:
             raise HTTPException(
                 status_code=501, detail=f"Error updating user: {user_update.error}"
@@ -378,55 +387,59 @@ async def save_data(data: SaveDataRequest):
                     detail=f"Error saving milestones: {milestones_result.error}",
                 )
 
-            # Create a mapping of milestone titles to IDs
-            milestone_map = {}
-            for milestone in milestones_result.data:
-                milestone_map[milestone["name"]] = milestone["id"]
+        # Save tasks (missions as tasks)
+        task_data = []
 
-            # Save tasks (missions as tasks)
-            task_data = []
+        # Find corresponding milestone for each event in schedules
+        for event in data.schedules.get("events", []):
+            recurrence_time_required = (
+                int(event.get("recurrence", "").strip("=")[-1])
+                if event.get("recurrence")
+                else 1
+            )
+            start_time = event.get("start", {}).get("dateTime", "")
+            end_time = event.get("end", {}).get("dateTime", "")
+            task_data.append(
+                {
+                    "user_id": data.userid,
+                    "name": event.get("summary", ""),
+                    "recurrence": event.get("recurrence", ""),
+                    "recurrence_time_required": recurrence_time_required,
+                    "recurrence_time_done": 0,
+                    "start_timestamptz": start_time,
+                    "end_timestamptz": end_time,
+                }
+            )
 
-            # Find corresponding milestone for each event in schedules
-            for event in data.schedules.get("events", []):
-                # For simplicity, assign to first milestone or create a general one
-                milestone_id = (
-                    list(milestone_map.values())[0] if milestone_map else None
+        print("len task_data:", len(task_data))
+
+        if task_data:
+            tasks_result = (
+                supabase_client.get_client().from_("tasks").insert(task_data).execute()
+            )
+
+            if hasattr(tasks_result, "error") and tasks_result.error:
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Error saving tasks: {tasks_result.error}",
                 )
 
-                if milestone_id:
-                    recurrence_time_required = (
-                        int(event.get("recurrence", "").strip("=")[-1])
-                        if event.get("recurrence")
-                        else 1
-                    )
-                    start_time = event.get("start", {}).get("dateTime", "")
-                    end_time = event.get("end", {}).get("dateTime", "")
-                    task_data.append(
-                        {
-                            "user_id": data.userid,
-                            "name": event.get("summary", ""),
-                            "recurrence": event.get("recurrence", ""),
-                            "recurrence_time_required": recurrence_time_required,
-                            "recurrence_time_done": 0,
-                            "start_timestamptz": start_time,
-                            "end_timestamptz": end_time,
-                        }
-                    )
+            print("Tasks saved successfully.")
 
-            print("len task_data:", len(task_data))
-
-            if task_data:
-                tasks_result = (
+            events = task2events(tasks_result.data)
+            print("event created. length:", len(events))
+            if events:
+                event_result = (
                     supabase_client.get_client()
-                    .from_("tasks")
-                    .insert(task_data)
+                    .from_("events")
+                    .insert(events)
                     .execute()
                 )
 
-                if hasattr(tasks_result, "error") and tasks_result.error:
+                if hasattr(event_result, "error") and event_result.error:
                     raise HTTPException(
                         status_code=503,
-                        detail=f"Error saving tasks: {tasks_result.error}",
+                        detail=f"Error saving events: {event_result.error}",
                     )
 
         return {"message": "Data saved successfully", "user_id": data.userid}
@@ -462,26 +475,81 @@ async def get_status(userData: User):
 @app.post("/api/load-data")
 async def load_data(userData: User):
     try:
-        milestone_ids = (
+        task_ids = (
             supabase_client.get_client()
-            .from_("milestones")
+            .from_("tasks")
             .select("id")
             .eq("user_id", userData.user_id)
-            .eq("email", userData.email)
             .execute()
         )
 
-        tasks = []
-        for milestone in milestone_ids.data:
-            tasks.append(
-                supabase_client.get_client()
-                .from_("tasks")
-                .select("*")
-                .eq("milestone_id", milestone.id)
-                .execute()
-            )
+        # select all events that has task_id in task_ids
+        events = (
+            supabase_client.get_client()
+            .from_("events")
+            .select("*")
+            .in_("task_id", [task["id"] for task in task_ids.data])
+            .execute()
+        )
 
-        return {"user_id": userData.user_id, "tasks": tasks}
+        return {"user_id": userData.user_id, "events": events}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting status: {str(e)}")
+
+
+@app.post("/api/events/toggle")
+async def toggle_event_status(request: ToggleEventRequest):
+    try:
+        # Verify that the event belongs to the user by checking the task ownership
+        event_result = (
+            supabase_client.get_client()
+            .from_("events")
+            .select("id, task_id")
+            .eq("id", request.event_id)
+            .execute()
+        )
+
+        if not event_result.data:
+            raise HTTPException(status_code=404, detail="Event not found")
+
+        event = event_result.data[0]
+
+        # Check if the task belongs to the user
+        task_result = (
+            supabase_client.get_client()
+            .from_("tasks")
+            .select("id, user_id")
+            .eq("id", event["task_id"])
+            .eq("user_id", request.user_id)
+            .execute()
+        )
+        print("checked task result")
+
+        if not task_result.data:
+            raise HTTPException(
+                status_code=403, detail="Not authorized to modify this event"
+            )
+
+        # Update the event's isDone status
+        update_result = (
+            supabase_client.get_client()
+            .from_("events")
+            .update({"isDone": request.is_done})
+            .eq("id", request.event_id)
+            .execute()
+        )
+
+        return {
+            "success": True,
+            "event_id": request.event_id,
+            "is_done": request.is_done,
+            "message": "Event status updated successfully",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error toggling event status: {str(e)}"
+        )
