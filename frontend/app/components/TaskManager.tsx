@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TaskState, StepStatus, MilestoneList, MissionList, ScheduleList } from '../types';
+import router from 'next/router';
 
 export default function TaskManager() {
   useEffect(() => {
@@ -511,7 +512,7 @@ export default function TaskManager() {
         )}
 
         <div className="p-4 border-t bg-gray-50 flex justify-center gap-3">
-        {/* Save buttons */}
+          {/* Save buttons */}
           {stepStatus.schedules && (
             <>
               <button
@@ -531,6 +532,13 @@ export default function TaskManager() {
               Start Over
             </button>
           )}
+          {/* Go to Calendar Page */}
+          <button
+            onClick={() => router.push('/calendar')}
+            className="bg-blue-700 text-white px-6 py-2 rounded-md hover:bg-blue-800"
+          >
+            Go to Calendar
+          </button>
         </div>
       </div>
 

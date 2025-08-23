@@ -2,9 +2,12 @@
 import { useEffect, useState } from 'react';
 
 import TaskManager from '../components/TaskManager';
+import Calendar from '../calendar/page';  // Imported Calendar page component
+
 export default function WelcomePage() {
     const [cookieStatus, setCookieStatus] = useState<string>('Checking...');
     const [debugInfo, setDebugInfo] = useState<any>(null);
+    const [userStatus, setUserStatus] = useState<string>('');  // New state for user status
 
     useEffect(() => {
         // Test if the cookie is accessible to your API routes
@@ -29,7 +32,29 @@ export default function WelcomePage() {
 
         checkCookie();
     }, []);
-  
+
+    // New effect to check user status
+    useEffect(() => {
+        const checkUserStatus = async () => {
+            try {
+                const response = await fetch('/api/get-status', {
+                    credentials: 'include'
+                });
+                console.log("response:", response);
+                console.log("response.ok:", response.ok);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                setUserStatus(data.status);
+            } catch (error) {
+                console.error('Status check error:', error);
+                setUserStatus('unknown');
+            }
+        };
+        checkUserStatus();
+    }, []);
+
     return (
         <div className={`min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 p-4`}>
             <div className="max-w-6xl mx-auto">
@@ -58,7 +83,7 @@ export default function WelcomePage() {
                     </div> */}
                 </div>
                 
-                <TaskManager />
+                {userStatus === "working" ? <Calendar /> : <TaskManager />}
             </div>
         </div>
     );

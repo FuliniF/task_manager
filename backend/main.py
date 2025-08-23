@@ -62,9 +62,16 @@ class MissionRequest(BaseModel):
     milestones: dict
 
 
+class DateTime(BaseModel):
+    dateTime: str
+    timeZone: str
+
+
 class ScheduleRequest(BaseModel):
-    missions: list
-    today: Optional[str] = None
+    summary: str
+    start: DateTime
+    end: DateTime
+    recurrence: str
 
 
 class SaveDataRequest(BaseModel):
@@ -380,7 +387,6 @@ async def save_data(data: SaveDataRequest):
 
             # Save tasks (missions as tasks)
             task_data = []
-            today = datetime.now().strftime("%Y-%m-%d")
 
             # Find corresponding milestone for each mission
             for mission in data.missions.get("missions", []):
@@ -418,3 +424,27 @@ async def save_data(data: SaveDataRequest):
 
     except Exception as e:
         raise HTTPException(status_code=504, detail=f"Error saving data: {str(e)}")
+
+
+@app.post("/api/back-get-status")
+async def get_status(userData: User):
+    try:
+        user_status = (
+            supabase_client.get_client()
+            .from_("users")
+            .select("status")
+            .eq(
+                "user_id", userData.user_id
+            )  # Changed from userData.username to userData.user_id
+            .single()
+            .execute()
+        )
+        print("user status:", user_status)
+
+        if not user_status.data:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {"status": user_status.data["status"]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting status: {str(e)}")
