@@ -6,32 +6,32 @@ import Calendar from '../calendar/page';  // Imported Calendar page component
 
 export default function WelcomePage() {
     const [cookieStatus, setCookieStatus] = useState<string>('Checking...');
-    const [debugInfo, setDebugInfo] = useState<any>(null);
+    // const [debugInfo, setDebugInfo] = useState<any>(null);
     const [userStatus, setUserStatus] = useState<string>('');  // New state for user status
 
-    useEffect(() => {
-        // Test if the cookie is accessible to your API routes
-        const checkCookie = async () => {
-            try {
-                const response = await fetch('/api/test-cookie', {
-                    credentials: 'include'
-                });
+    // useEffect(() => {
+    //     // Test if the cookie is accessible to your API routes
+    //     const checkCookie = async () => {
+    //         try {
+    //             const response = await fetch('/api/test-cookie', {
+    //                 credentials: 'include'
+    //             });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+    //             if (!response.ok) {
+    //                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    //             }
                 
-                const result = await response.json();
-                setCookieStatus(`Cookie status: ${result.hasToken ? 'Found' : 'Not found'}`);
-                setDebugInfo(result);
-            } catch (error) {
-                console.error('Cookie check error:', error);
-                setCookieStatus(`Error checking cookie: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            }
-        };
+    //             const result = await response.json();
+    //             setCookieStatus(`Cookie status: ${result.hasToken ? 'Found' : 'Not found'}`);
+    //             setDebugInfo(result);
+    //         } catch (error) {
+    //             console.error('Cookie check error:', error);
+    //             setCookieStatus(`Error checking cookie: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    //         }
+    //     };
 
-        checkCookie();
-    }, []);
+    //     checkCookie();
+    // }, []);
 
     // New effect to check user status
     useEffect(() => {
@@ -63,13 +63,13 @@ export default function WelcomePage() {
                         Welcome to Goal Reacher!
                     </h1>
                     {/* debug info */}
-                    <p className="text-emerald-900">{cookieStatus}</p>
+                    {/* <p className="text-emerald-900">{cookieStatus}</p>
                     {debugInfo && (
                         <div className="text-sm text-gray-600 mt-2">
                             <p>Token length: {debugInfo.tokenLength}</p>
                             <p>All cookies: {JSON.stringify(debugInfo.allCookies)}</p>
                         </div>
-                    )}
+                    )} */}
                     <p className="text-lg text-gray-700 mb-6 font-serif">
                         Transform your goals into actionable plans with AI assistance
                     </p>
