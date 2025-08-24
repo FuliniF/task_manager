@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { RRule } from 'rrule'; // Ensure you have the 'rrule' package installed
 
 
 interface TaskObject {
@@ -25,7 +24,7 @@ interface EventObject {
 }
 
 export default function Calendar() { 
-    const [tasks, setTasks] = useState<TaskObject[]>([]);
+    // const [tasks, setTasks] = useState<TaskObject[]>([]);
     const [events, setEvents] = useState<EventObject[]>([]);
     const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -68,13 +67,13 @@ export default function Calendar() {
     };
 
     // Calendar helper functions
-    const getDaysInMonth = (date: Date) => {
-        return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-    };
+    // const getDaysInMonth = (date: Date) => {
+    //     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    // };
 
-    const getFirstDayOfMonth = (date: Date) => {
-        return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    };
+    // const getFirstDayOfMonth = (date: Date) => {
+    //     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    // };
 
     const getEventsForDate = (date: Date) => {
         return events.filter(event => {

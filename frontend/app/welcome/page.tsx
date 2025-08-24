@@ -6,7 +6,7 @@ import Calendar from '../calendar/page';  // Imported Calendar page component
 
 export default function WelcomePage() {
     const [cookieStatus, setCookieStatus] = useState<string>('Checking...');
-    const [debugInfo, setDebugInfo] = useState<any>(null);
+    const [debugInfo, setDebugInfo] = useState<{ tokenLength: number; allCookies: Record<string, string> } | null>(null);
     const [userStatus, setUserStatus] = useState<string>('');  // New state for user status
 
     useEffect(() => {
