@@ -270,6 +270,9 @@ export default function TaskManager() {
       setError(err instanceof Error ? err.message : 'An error occurred while saving');
     } finally {
       setLoading(null);
+      if (!error) {
+        window.location.reload();
+      }
     }
   };
 
@@ -532,13 +535,6 @@ export default function TaskManager() {
               Start Over
             </button>
           )}
-          {/* Go to Calendar Page */}
-          <button
-            onClick={() => router.push('/calendar')}
-            className="bg-blue-700 text-white px-6 py-2 rounded-md hover:bg-blue-800"
-          >
-            Go to Calendar
-          </button>
         </div>
       </div>
 

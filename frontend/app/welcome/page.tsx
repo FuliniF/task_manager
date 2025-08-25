@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import TaskManager from '../components/TaskManager';
 import Calendar from '../calendar/page';  // Imported Calendar page component
+import Loading from '../components/loading';
 
 export default function WelcomePage() {
     const [cookieStatus, setCookieStatus] = useState<string>('Checking...');
@@ -83,7 +84,13 @@ export default function WelcomePage() {
                     </div> */}
                 </div>
 
-                {userStatus !== "working" ? <TaskManager /> : <Calendar />}
+                {userStatus === '' ? (
+                    <Loading />
+                ) : userStatus === "working" ? (
+                    <Calendar />
+                ) : (
+                    <TaskManager />
+                )}
             </div>
         </div>
     );
