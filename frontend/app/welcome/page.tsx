@@ -8,7 +8,8 @@ import Loading from '../components/loading';
 export default function WelcomePage() {
     // const [cookieStatus, setCookieStatus] = useState<string>('Checking...');
     // const [debugInfo, setDebugInfo] = useState<any>(null);
-    const [userStatus, setUserStatus] = useState<string>('');  // New state for user status
+    const [userStatus, setUserStatus] = useState<string>('');
+    const [isClient, setIsClient] = useState(false); 
 
     // useEffect(() => {
     //     // Test if the cookie is accessible to your API routes
@@ -36,13 +37,16 @@ export default function WelcomePage() {
 
     // New effect to check user status
     useEffect(() => {
+        setIsClient(true); // Set to true when the component is mounted on the client
+    }, []);
+
+    useEffect(() => {
+        if (!isClient) return; // Ensure this runs only on the client
         const checkUserStatus = async () => {
             try {
                 const response = await fetch('/api/get-status', {
                     credentials: 'include'
                 });
-                console.log("response:", response);
-                console.log("response.ok:", response.ok);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -54,7 +58,11 @@ export default function WelcomePage() {
             }
         };
         checkUserStatus();
-    }, []);
+    }, [isClient]);
+
+    if (!isClient) {
+        return null; // Render nothing on the server
+    }
 
     return (
         <div className={`min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 p-4`}>
