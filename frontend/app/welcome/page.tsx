@@ -92,13 +92,14 @@ export default function WelcomePage() {
                     </div> */}
                 </div>
 
-                {userStatus === '' ? (
+                {userStatus !== "working" ? <TaskManager /> : <Calendar />}
+                {/* {userStatus === '' ? (
                     <Loading />
                 ) : userStatus === "working" ? (
                     <Calendar />
                 ) : (
                     <TaskManager />
-                )}
+                )} */}
             </div>
         </div>
     );
